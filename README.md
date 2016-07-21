@@ -2,6 +2,8 @@
 
 Original Release: Jan/27/2006  
 Latest Update: July/15/2010
+
+![](https://whenimbored.xfx.net/wp-content/uploads/2016/07/vbMP3Decoder-ss.png)
     
 **What is vbMP3Decoder?**
 
