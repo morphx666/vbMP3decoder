@@ -29,4 +29,4 @@ recent versions of the .NET, making it simpler, cleaner and even faster.
 
 To learn...  
 The speed and quality of the decoder are not optimal for production use so I'd 
-suggest you use this code to learn, and of course, to admire how VB, and the whole .NET framework, have evolved!
+suggest you use this code to learn and of course, to admire how VB, and the whole .NET framework, have evolved!
