@@ -23,6 +23,11 @@ Public Class Decoder3
     Private bitstream3 As Bitstream3
     Private audio3 As Audio3
 
+    Private v1() As Integer = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 3, 2}
+    Private v2() As Double = {-0.6, -0.535, -0.33, -0.185, -0.095, -0.041, -0.0142, -0.0037}
+    Private st() As Double = Array.ConvertAll(My.Resources.synth_table.Replace(vbCrLf, vbLf).Split(vbLf),
+                                          New Converter(Of String, Double)(Function(k) Double.Parse(k)))
+
     Public Sub New()
         Etc3.InitArray(Of Double)(g_synth_n_win, 63, 31)
         Etc3.InitArray(Of Double)(store, 1, 31, 17)
@@ -47,18 +52,15 @@ Public Class Decoder3
         Dim i As Integer
         Dim c As Double
 
-        For i = 0 To 20
-            p_pretab(i) = CInt(Choose(i + 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 3, 2))
-        Next
+        Array.Copy(v1, p_pretab, v1.Length)
 
         For i = 0 To 7
-            CI(i) = CDbl(Choose(i + 1, -0.6, -0.535, -0.33, -0.185, -0.095, -0.041, -0.0142, -0.0037))
+            CI(i) = v2(i)
             c = Math.Sqrt(1.0 + CI(i) ^ 2)
             CS(i) = 1.0 / c
             CA(i) = CI(i) / c
         Next
 
-        Dim st() As Double = Array.ConvertAll(My.Resources.synth_table.Split(vbCrLf.Substring(0, 1).ToCharArray), New Converter(Of String, Double)(AddressOf Str2Sng))
         For i = 0 To 511
             p_synth_dtbl(i) = st(i)
         Next

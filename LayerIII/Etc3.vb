@@ -31,8 +31,8 @@ Public Class Etc3
 
     ' MPEG1 Layer 1-3 frame header
     Public Structure t_mpeg1_header
-        Dim ID As Integer ' 1 bit ''                       1 bit
-        Dim layer As t_mpeg1_layer ' 2 bits                 2 bits
+        Dim ID As Integer ' 1 bit
+        Dim layer As t_mpeg1_layer ' 2 bits
         Dim protection_bit As Integer ' 1 bit
         Dim bitrate_index As Integer ' 4 bits
         Dim sampling_frequency As Integer ' 2 bits
@@ -142,6 +142,14 @@ Public Class Etc3
     Private audio3 As Audio3
     Private huffman3 As Huffman3
 
+    Private v1() As Integer = {0, 4, 8, 12, 16, 20, 24, 30, 36, 44, 52, 62, 74, 90, 110, 134, 162, 196, 238, 288, 342, 418, 576}
+    Private v2() As Integer = {0, 4, 8, 12, 16, 20, 24, 30, 36, 42, 50, 60, 72, 88, 106, 128, 156, 190, 230, 276, 330, 384, 576}
+    Private v3() As Integer = {0, 4, 8, 12, 16, 20, 24, 30, 36, 44, 54, 66, 82, 102, 126, 156, 194, 240, 296, 364, 448, 550, 576}
+    Private v4() As Integer = {0, 4, 8, 12, 16, 22, 30, 40, 52, 66, 84, 106, 136, 192}
+    Private v5() As Integer = {0, 4, 8, 12, 16, 22, 28, 38, 50, 64, 80, 100, 126, 192}
+    Private v6() As Integer = {0, 4, 8, 12, 16, 22, 30, 42, 58, 78, 104, 138, 180, 192}
+
+
     Public Sub Init(ByVal decoder3 As Decoder3, ByVal bitstream3 As Bitstream3, ByVal audio3 As Audio3, ByVal huffman3 As Huffman3)
         Me.decoder3 = decoder3
         Me.bitstream3 = bitstream3
@@ -181,13 +189,13 @@ Public Class Etc3
             tIdx += 1
 
             If i <= 22 Then
-                bitstream3.g_sf_band_indices(0).L(i) = CInt(Choose(i + 1, 0, 4, 8, 12, 16, 20, 24, 30, 36, 44, 52, 62, 74, 90, 110, 134, 162, 196, 238, 288, 342, 418, 576))
-                bitstream3.g_sf_band_indices(1).L(i) = CInt(Choose(i + 1, 0, 4, 8, 12, 16, 20, 24, 30, 36, 42, 50, 60, 72, 88, 106, 128, 156, 190, 230, 276, 330, 384, 576))
-                bitstream3.g_sf_band_indices(2).L(i) = CInt(Choose(i + 1, 0, 4, 8, 12, 16, 20, 24, 30, 36, 44, 54, 66, 82, 102, 126, 156, 194, 240, 296, 364, 448, 550, 576))
+                bitstream3.g_sf_band_indices(0).L(i) = v1(i)
+                bitstream3.g_sf_band_indices(1).L(i) = v2(i)
+                bitstream3.g_sf_band_indices(2).L(i) = v3(i)
                 If i <= 13 Then
-                    bitstream3.g_sf_band_indices(0).S(i) = CInt(Choose(i + 1, 0, 4, 8, 12, 16, 22, 30, 40, 52, 66, 84, 106, 136, 192))
-                    bitstream3.g_sf_band_indices(1).S(i) = CInt(Choose(i + 1, 0, 4, 8, 12, 16, 22, 28, 38, 50, 64, 80, 100, 126, 192))
-                    bitstream3.g_sf_band_indices(2).S(i) = CInt(Choose(i + 1, 0, 4, 8, 12, 16, 22, 30, 42, 58, 78, 104, 138, 180, 192))
+                    bitstream3.g_sf_band_indices(0).S(i) = v4(i)
+                    bitstream3.g_sf_band_indices(1).S(i) = v5(i)
+                    bitstream3.g_sf_band_indices(2).S(i) = v6(i)
                 End If
             End If
         Next

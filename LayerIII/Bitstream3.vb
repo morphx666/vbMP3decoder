@@ -40,6 +40,12 @@ Public Class Bitstream3
     Private bitstream3 As Bitstream3
     Private audio3 As Audio3
 
+    Private v1() As Integer = {0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4}
+    Private v2() As Integer = {0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3}
+    Private v3() As Integer = {0, 32000, 64000, 96000, 128000, 160000, 192000, 224000, 256000, 288000, 320000, 352000, 384000, 416000, 448000}
+    Private v4() As Integer = {0, 32000, 48000, 56000, 64000, 80000, 96000, 112000, 128000, 160000, 192000, 224000, 256000, 320000, 384000}
+    Private v5() As Integer = {0, 32000, 40000, 48000, 56000, 64000, 80000, 96000, 112000, 128000, 160000, 192000, 224000, 256000, 320000}
+
     Public Sub Init(ByVal fileName As String, ByVal decoder3 As Decoder3, ByVal huffman3 As Huffman3, ByVal bitstream3 As Bitstream3, ByVal audio3 As Audio3)
         bitRateSum = 0
         bitRateCount = 0
@@ -57,12 +63,12 @@ Public Class Bitstream3
         fSize = fBuf.Length
 
         For i As Integer = 0 To 15
-            p_mpeg1_scalefac_sizes(i)(0) = CInt(Choose(i + 1, 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4))
-            p_mpeg1_scalefac_sizes(i)(1) = CInt(Choose(i + 1, 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3))
+            p_mpeg1_scalefac_sizes(i)(0) = v1(i)
+            p_mpeg1_scalefac_sizes(i)(1) = v2(i)
             If i < 15 Then
-                mpeg1_bitrates(0)(i) = CInt(Choose(i + 1, 0, 32000, 64000, 96000, 128000, 160000, 192000, 224000, 256000, 288000, 320000, 352000, 384000, 416000, 448000))
-                mpeg1_bitrates(1)(i) = CInt(Choose(i + 1, 0, 32000, 48000, 56000, 64000, 80000, 96000, 112000, 128000, 160000, 192000, 224000, 256000, 320000, 384000))
-                mpeg1_bitrates(2)(i) = CInt(Choose(i + 1, 0, 32000, 40000, 48000, 56000, 64000, 80000, 96000, 112000, 128000, 160000, 192000, 224000, 256000, 320000))
+                mpeg1_bitrates(0)(i) = v3(i)
+                mpeg1_bitrates(1)(i) = v4(i)
+                mpeg1_bitrates(2)(i) = v5(i)
             End If
         Next
     End Sub
