@@ -1,5 +1,4 @@
 Imports System.Threading
-Imports System.ComponentModel
 
 Public Class CMP3Decoder
     Implements IDisposable
@@ -14,6 +13,7 @@ Public Class CMP3Decoder
     Public Event StateChanged()
     Public Event NewBuffer()
     Public Event DecodingProgress(progress As Single)
+    Public Event NewFFTFrame()
 
     Private mFileName As String
     Private mOwner As Windows.Forms.Control
@@ -22,6 +22,8 @@ Public Class CMP3Decoder
     Private mVolume As Integer = 100
     Private mBufferMultiplier As Integer = 1
     Private mNormalizedBuffer() As Integer
+
+    Private mFFTSize As FFTSizeConstants = FFTSizeConstants.FFTs4096
 
     Private decodeThread As Thread
     Private decoderIsBusy As Boolean = False
@@ -38,11 +40,15 @@ Public Class CMP3Decoder
 
     Private mDecodeBuffer As List(Of Integer) = New List(Of Integer)
 
+    Private nbL(0) As Integer
+    Private nbR(0) As Integer
+
     Private Enum EventConstants
         PositionChanged
         StateChanged
         NewBuffer
         DecodingProgress
+        NewFFTFrame
     End Enum
 
     Private Delegate Sub SafeRaiseEventDel(ByRef args() As Object)
@@ -56,6 +62,8 @@ Public Class CMP3Decoder
                 RaiseEvent NewBuffer()
             Case EventConstants.DecodingProgress
                 RaiseEvent DecodingProgress(CSng(Position / FileLength * 100))
+            Case EventConstants.NewFFTFrame
+                RaiseEvent NewFFTFrame()
         End Select
     End Sub
 
@@ -106,6 +114,18 @@ Public Class CMP3Decoder
         End Get
     End Property
 
+    Public ReadOnly Property NormalizedBufferLeft As Integer()
+        Get
+            Return nbL
+        End Get
+    End Property
+
+    Public ReadOnly Property NormalizedBufferRight As Integer()
+        Get
+            Return nbR
+        End Get
+    End Property
+
     Public ReadOnly Property Channels As Short
         Get
             Return audio3.PlayBuffer.Format.Channels
@@ -134,7 +154,6 @@ Public Class CMP3Decoder
     End Property
 
     Private Function NormalizeBuffer(source() As Byte) As Integer()
-        'Try
         Dim f As SlimDX.Multimedia.WaveFormat = audio3.BufferDescription.Format
         Dim dataSize As Integer = f.BitsPerSample \ 8
         Dim bb(source.Length \ dataSize - 1) As Integer
@@ -142,6 +161,11 @@ Public Class CMP3Decoder
         Dim rtChOffset As Integer = If(f.Channels = 1, 0, dataSize)
         Dim tmpB(dataSize - 1) As Byte
         Dim bbStep As Integer = 0
+
+        If bb.Length <> nbL.Length Then
+            ReDim nbL(bb.Length - 1)
+            ReDim nbR(bb.Length - 1)
+        End If
 
         For i As Integer = 0 To source.Length - rtChOffset - 1 Step cycleStep
             Select Case f.BitsPerSample
@@ -153,23 +177,21 @@ Public Class CMP3Decoder
                     End If
                 Case 16
                     Array.Copy(source, i, tmpB, 0, dataSize)
-                    bb(bbStep) = System.BitConverter.ToInt16(tmpB, 0)
+                    bb(bbStep) = BitConverter.ToInt16(tmpB, 0)
 
                     If f.Channels = 2 Then
                         Array.Copy(source, i + rtChOffset, tmpB, 0, dataSize)
-                        bb(bbStep + 1) = System.BitConverter.ToInt16(tmpB, 0)
+                        bb(bbStep + 1) = BitConverter.ToInt16(tmpB, 0)
                     End If
             End Select
 
+            nbL(bbStep) = bb(bbStep)
+            nbR(bbStep) = bb(bbStep + f.Channels - 1)
+
             bbStep += f.Channels
-        Next i
+        Next
 
         Return bb
-        'Catch e As System.Exception
-        '    LogMessage(ErrorConstants.NormalizeBufferEx, e.StackTrace, e.Message)
-        'End Try
-
-        'Return Nothing
     End Function
 
     Private Sub SetRateAndVolume()
@@ -226,6 +248,16 @@ Public Class CMP3Decoder
             decodeThread.Start()
         End If
     End Sub
+
+    Public Property FFTSize As FFTSizeConstants
+        Get
+            Return mFFTSize
+        End Get
+        Set(value As FFTSizeConstants)
+            mFFTSize = value
+            InitDecoder(True)
+        End Set
+    End Property
 
     Private Sub InitDecoder(skipAudioInit As Boolean)
         FirstTimeInit()
@@ -352,9 +384,9 @@ Public Class CMP3Decoder
         If IO.File.Exists(mFileName) Then
             InitDecoder(True)
 
-            If bitstream3.MPG_Position() <> etc3.STATUS.C_MPG_EOF AndAlso abortDecoder <> True Then
+            If bitstream3.MPG_Position() <> Etc3.STATUS.C_MPG_EOF AndAlso abortDecoder <> True Then
                 Do
-                    If bitstream3.MPG_Read_Frame() = etc3.STATUS.sOK Then
+                    If bitstream3.MPG_Read_Frame() = Etc3.STATUS.sOK Then
                         Try
                             decoder3.MPG_Decode_L3()
                         Catch ex As Exception
@@ -373,7 +405,7 @@ Public Class CMP3Decoder
     Private Sub DecodeMP3()
         decoderIsBusy = True
 
-        Do While bitstream3.MPG_Position() <> etc3.STATUS.C_MPG_EOF AndAlso
+        Do While bitstream3.MPG_Position() <> Etc3.STATUS.C_MPG_EOF AndAlso
                  decodeThread.ThreadState = ThreadState.Running AndAlso
                  abortDecoder <> True
 
@@ -391,7 +423,7 @@ Public Class CMP3Decoder
 
         Do
             Do While abortDecoder <> True
-                If bitstream3.MPG_Read_Frame() = etc3.STATUS.sOK Then
+                If bitstream3.MPG_Read_Frame() = Etc3.STATUS.sOK Then
                     Try
                         decoder3.MPG_Decode_L3()
                     Catch ex As Exception
@@ -410,7 +442,7 @@ Public Class CMP3Decoder
                     Else
                         Exit Do
                     End If
-                ElseIf bitstream3.MPG_Position() = etc3.STATUS.C_MPG_EOF Then
+                ElseIf bitstream3.MPG_Position() = Etc3.STATUS.C_MPG_EOF Then
                     isEOF = True
                     Exit Do
                 End If

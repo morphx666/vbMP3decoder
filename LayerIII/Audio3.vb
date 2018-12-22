@@ -12,7 +12,7 @@ Public Class Audio3
     Private bufPlayDesc As SoundBufferDescription
     Private playBuf As SecondarySoundBuffer
     Private notifySize As Integer
-    Private numberPlaybackNotifications As Integer = 2
+    Private ReadOnly numberPlaybackNotifications As Integer = 2
     Private nextPlaybackOffset As Integer
     Private mPlaybackPosition As Integer
     Private mIsInit As Boolean = False
@@ -134,9 +134,10 @@ Public Class Audio3
         Dim np(numberPlaybackNotifications - 1) As NotificationPosition
 
         For i As Integer = 0 To numberPlaybackNotifications - 1
-            np(i) = New NotificationPosition()
-            np(i).Offset = (notifySize * i) + notifySize - 1
-            np(i).Event = eventDecode
+            np(i) = New NotificationPosition With {
+                .Offset = (notifySize * i) + notifySize - 1,
+                .Event = eventDecode
+            }
         Next
         playBuf.SetNotificationPositions(np)
 
