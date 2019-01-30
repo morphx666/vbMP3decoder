@@ -40,6 +40,10 @@ Public Class FFTRenderer
         fft.FillFFTBuffer(bufL, bufR)
     End Sub
 
+    Public Sub FillAudioBuffer(bufL() As Integer, bufR() As Integer)
+        fft.FillFFTBuffer(bufL, bufR)
+    End Sub
+
     Protected Overrides Sub OnPaintBackground(e As PaintEventArgs)
         MyBase.OnPaintBackground(e)
     End Sub
@@ -50,6 +54,6 @@ Public Class FFTRenderer
 
         g.Clear(Me.BackColor)
 
-        fft.RenderFFT(g, Me.DisplayRectangle, forePenColor, Pens.Transparent)
+        fft.RenderFilledFFT(g, Me.DisplayRectangle, forePenColor, Pens.Transparent, False)
     End Sub
 End Class

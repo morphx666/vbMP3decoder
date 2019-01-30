@@ -1,4 +1,5 @@
-﻿Imports vbMP3decoder
+﻿Imports System.Collections.Generic
+Imports vbMP3decoder
 Imports vbMP3decoder.FFT
 
 Public Class FFTSupport
@@ -47,7 +48,7 @@ Public Class FFTSupport
         ffWavSrcBufIndex = 0
     End Sub
 
-    Public Sub RenderFFT(g As Graphics, r As Rectangle, colorLeft As Pen, colorRight As Pen)
+    Public Sub RenderFFT(g As Graphics, r As Rectangle, colorLeft As Pen, colorRight As Pen, Optional drawVerticalGrid As Boolean = True)
         RunFFT()
 
         Dim s As Size
@@ -56,26 +57,72 @@ Public Class FFTSupport
         Dim lastPR As Point = lastPL
         Dim newDivX As Integer
 
-        Using p As New Pen(Color.FromArgb(128, Color.DarkSlateGray))
-            For x As Integer = 0 To fftSize2 - 1 Step fftSize2 / 5
-                For x1 As Integer = 0 To 10
-                    newDivX = r.X + x + Math.Min(Math.Log10(x1 + 1) / Math.Log10(fftSize2 - 1) * r.Width, r.Width) + s.Width
-                    g.DrawLine(p, newDivX, r.Y, newDivX, r.Bottom)
+        If drawVerticalGrid Then
+            Using p As New Pen(Color.FromArgb(128, Color.DarkSlateGray))
+                For x As Integer = 0 To fftSize2 - 1 Step fftSize2 / 5
+                    For x1 As Integer = 0 To 10
+                        newDivX = r.X + x + Math.Min(Math.Log10(x1 + 1) / Math.Log10(fftSize2 - 1) * r.Width, r.Width) + s.Width
+                        g.DrawLine(p, newDivX, r.Y, newDivX, r.Bottom)
+                    Next
                 Next
-            Next
-        End Using
+            End Using
+        End If
 
-        Dim lastW As Integer = FFT2Pts(fftSize2 - 1, r, 1, FFTSize).Width + colorLeft.Width
+        Dim lastW As Integer = FFT2Pts(fftSize2 - 1, r, 1).Width + colorLeft.Width
         For x As Integer = 0 To fftSize2 - 1
-            s = FFT2Pts(x, r, 1, FFTSize)
+            s = FFT2Pts(x, r, 1)
             newDivX = r.X + x / fftSize2 * (r.Width - lastW) + s.Width + penOffset
             g.DrawLine(colorLeft, lastPL.X, lastPL.Y, newDivX, r.Bottom - s.Height - colorLeft.Width)
             lastPL = New Point(newDivX, r.Bottom - s.Height)
 
-            s = FFT2Pts(x, r, 2, FFTSize)
+            s = FFT2Pts(x, r, 2)
             g.DrawLine(colorRight, lastPR.X, lastPR.Y, newDivX, r.Bottom - s.Height - colorLeft.Width)
             lastPR = New Point(newDivX, r.Bottom - s.Height)
         Next
+
+        g.DrawRectangle(Pens.DimGray, r)
+        Using sb As New SolidBrush(Color.FromArgb(128, 33, 33, 33))
+            g.FillRectangle(sb, r)
+        End Using
+    End Sub
+
+    Public Sub RenderFilledFFT(g As Graphics, r As Rectangle, colorLeft As Pen, colorRight As Pen, Optional drawVerticalGrid As Boolean = True)
+        RunFFT()
+
+        Dim s As Size
+        Dim penOffset As Integer = colorLeft.Width / 2
+        Dim lastPL As Point = New Point(r.X + penOffset, r.Bottom)
+        Dim lastPR As Point = lastPL
+        Dim newDivX As Integer
+
+        If drawVerticalGrid Then
+            Using p As New Pen(Color.FromArgb(128, Color.DarkSlateGray))
+                For x As Integer = 0 To fftSize2 - 1 Step fftSize2 / 5
+                    For x1 As Integer = 0 To 10
+                        newDivX = r.X + x + Math.Min(Math.Log10(x1 + 1) / Math.Log10(fftSize2 - 1) * r.Width, r.Width) + s.Width
+                        g.DrawLine(p, newDivX, r.Y, newDivX, r.Bottom)
+                    Next
+                Next
+            End Using
+        End If
+
+        Dim ptsL As New List(Of Point)
+        Dim ptsR As New List(Of Point)
+        Dim lastW As Integer = FFT2Pts(fftSize2 - 1, r, 1).Width + colorLeft.Width
+        For x As Integer = 0 To fftSize2 - 1
+            s = FFT2Pts(x, r, 1)
+            newDivX = r.X + x / fftSize2 * (r.Width - lastW) + s.Width + penOffset
+            ptsL.Add(New Point(lastPL.X, lastPL.Y))
+            lastPL = New Point(newDivX, r.Bottom - s.Height)
+
+            s = FFT2Pts(x, r, 2)
+            ptsR.Add(New Point(lastPR.X, lastPR.Y))
+            lastPR = New Point(newDivX, r.Bottom - s.Height)
+        Next
+        ptsL.Add(New Point(lastPL.X, r.Bottom))
+        g.FillPolygon(New SolidBrush(colorLeft.Color), ptsL.ToArray())
+        ptsR.Add(New Point(lastPR.X, r.Bottom))
+        g.FillPolygon(New SolidBrush(colorRight.Color), ptsR.ToArray())
 
         g.DrawRectangle(Pens.DimGray, r)
         Using sb As New SolidBrush(Color.FromArgb(128, 33, 33, 33))
@@ -120,10 +167,35 @@ Public Class FFTSupport
         Loop Until fftWavDstIndex = 0 OrElse ffWavSrcBufIndex = 0
     End Sub
 
-    Private Function FFT2Pts(x As Integer, r As Rectangle, channel As Integer, fftSize As FFTSizeConstants) As Size
+    Public Sub FillFFTBuffer(bufL() As Integer, bufR() As Integer)
+        Do
+            Do
+                If ffWavSrcBufIndex >= bufL.Length Then
+                    If fftWavDstIndex >= FFTSize Then fftWavDstIndex = 0
+                    ffWavSrcBufIndex = 0
+                    Exit Do
+                ElseIf fftWavDstIndex >= FFTSize Then
+                    fftWavDstIndex = 0
+                    Exit Do
+                End If
+
+                fftWavDstBufL(fftWavDstIndex) = bufL(ffWavSrcBufIndex) * fftWindowValues(fftWavDstIndex)
+                fftWavDstBufR(fftWavDstIndex) = bufR(ffWavSrcBufIndex) * fftWindowValues(fftWavDstIndex)
+
+                fftWavDstIndex += 1
+                ffWavSrcBufIndex += 1
+            Loop
+        Loop Until fftWavDstIndex = 0 OrElse ffWavSrcBufIndex = 0
+    End Sub
+
+    Private Function FFT2Pts(x As Integer, r As Rectangle, channel As Integer) As Size
         Dim v As Double
 
         v = (FFTAvg(x, channel) / fftWindowSum * 2) / 20
+
+        ' Amplitude
+        ' v = Math.Min((0.3 * Math.Sqrt(v) / FFTSize) * r.Height, r.Height)
+        ' dB
         v = Math.Min(Math.Log10(v + 1) / 10 * r.Height, r.Height)
         x = Math.Min(Math.Log10(x + 1) / Math.Log10(fftSize2 - 1) * r.Width, r.Width)
 

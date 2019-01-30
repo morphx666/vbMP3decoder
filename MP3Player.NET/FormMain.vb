@@ -352,8 +352,8 @@ Public Class FormMain
                                                   Dim p As Peak = CalculateRMS(mp3.NormalizedBuffer)
                                                   VuL.Value = p.Left * mp3.Volume
                                                   VuR.Value = p.Right * mp3.Volume
-                                                  FftRendererMain.FillAudioBuffer(mp3.NormalizedBufferLeft.Select(Function(b) CByte(b * mp3.Volume / 100 And &HFF)).ToArray(),
-                                                                                  mp3.NormalizedBufferRight.Select(Function(b) CByte(b * mp3.Volume / 100 And &HFF)).ToArray())
+                                                  FftRendererMain.FillAudioBuffer(mp3.NormalizedBufferLeft,
+                                                                                  mp3.NormalizedBufferRight)
                                               End Sub
                 Else
                     mp3.Stop()
