@@ -36,12 +36,12 @@ Public Class FFTRenderer
                  End Sub)
     End Sub
 
-    Public Sub FillAudioBuffer(bufL() As Byte, bufR() As Byte)
-        fft.FillFFTBuffer(bufL, bufR)
+    Public Sub FillAudioBuffer(bufL() As Byte, bufR() As Byte, vol As Integer)
+        fft.FillFFTBuffer(bufL, bufR, vol)
     End Sub
 
-    Public Sub FillAudioBuffer(bufL() As Integer, bufR() As Integer)
-        fft.FillFFTBuffer(bufL, bufR)
+    Public Sub FillAudioBuffer(bufL() As Integer, bufR() As Integer, vol As Integer)
+        fft.FillFFTBuffer(bufL, bufR, vol)
     End Sub
 
     Protected Overrides Sub OnPaintBackground(e As PaintEventArgs)

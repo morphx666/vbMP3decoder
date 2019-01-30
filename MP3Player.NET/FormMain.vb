@@ -353,7 +353,8 @@ Public Class FormMain
                                                   VuL.Value = p.Left * mp3.Volume
                                                   VuR.Value = p.Right * mp3.Volume
                                                   FftRendererMain.FillAudioBuffer(mp3.NormalizedBufferLeft,
-                                                                                  mp3.NormalizedBufferRight)
+                                                                                  mp3.NormalizedBufferRight,
+                                                                                  mp3.Volume)
                                               End Sub
                 Else
                     mp3.Stop()

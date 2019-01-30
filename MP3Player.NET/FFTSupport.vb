@@ -146,7 +146,7 @@ Public Class FFTSupport
         Next
     End Sub
 
-    Public Sub FillFFTBuffer(bufL() As Byte, bufR() As Byte)
+    Public Sub FillFFTBuffer(bufL() As Byte, bufR() As Byte, vol As Integer)
         Do
             Do
                 If ffWavSrcBufIndex >= bufL.Length Then
@@ -158,8 +158,8 @@ Public Class FFTSupport
                     Exit Do
                 End If
 
-                fftWavDstBufL(fftWavDstIndex) = bufL(ffWavSrcBufIndex) * fftWindowValues(fftWavDstIndex)
-                fftWavDstBufR(fftWavDstIndex) = bufR(ffWavSrcBufIndex) * fftWindowValues(fftWavDstIndex)
+                fftWavDstBufL(fftWavDstIndex) = bufL(ffWavSrcBufIndex) * fftWindowValues(fftWavDstIndex) * vol / 100
+                fftWavDstBufR(fftWavDstIndex) = bufR(ffWavSrcBufIndex) * fftWindowValues(fftWavDstIndex) * vol / 100
 
                 fftWavDstIndex += 1
                 ffWavSrcBufIndex += 1
@@ -167,7 +167,7 @@ Public Class FFTSupport
         Loop Until fftWavDstIndex = 0 OrElse ffWavSrcBufIndex = 0
     End Sub
 
-    Public Sub FillFFTBuffer(bufL() As Integer, bufR() As Integer)
+    Public Sub FillFFTBuffer(bufL() As Integer, bufR() As Integer, vol As Integer)
         Do
             Do
                 If ffWavSrcBufIndex >= bufL.Length Then
@@ -179,8 +179,8 @@ Public Class FFTSupport
                     Exit Do
                 End If
 
-                fftWavDstBufL(fftWavDstIndex) = bufL(ffWavSrcBufIndex) * fftWindowValues(fftWavDstIndex)
-                fftWavDstBufR(fftWavDstIndex) = bufR(ffWavSrcBufIndex) * fftWindowValues(fftWavDstIndex)
+                fftWavDstBufL(fftWavDstIndex) = bufL(ffWavSrcBufIndex) * fftWindowValues(fftWavDstIndex) * vol / 100
+                fftWavDstBufR(fftWavDstIndex) = bufR(ffWavSrcBufIndex) * fftWindowValues(fftWavDstIndex) * vol / 100
 
                 fftWavDstIndex += 1
                 ffWavSrcBufIndex += 1
